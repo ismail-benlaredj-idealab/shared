@@ -1,0 +1,40 @@
+import org.apache.spark.mllib.clustering.KMeans;
+import org.apache.spark.mllib.clustering.KMeansModel;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.mllib.linalg.Vector;
+
+public class KMeansClustering {
+    public static void trainKMeansModel(JavaRDD<Vector> rddData, JavaSparkContext jsc) {
+        // Set number of clusters (K) and iterations
+        int numClusters = 3; // Change as needed
+        int numIterations = 20;
+
+        // Train K-Means model
+        KMeansModel model = KMeans.train(rddData.rdd(), numClusters, numIterations);
+
+        // Print out cluster centers
+        System.out.println("Cluster Centers: ");
+        for (Vector center : model.clusterCenters()) {
+            System.out.println(center);
+        }
+
+        // Predict cluster for each data point
+        JavaRDD<Integer> predictions = model.predict(rddData);
+        predictions.collect().forEach(System.out::println);
+    }
+}
+
+
+<dependencies>
+    <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-core_2.12</artifactId>
+        <version>3.4.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-mllib_2.12</artifactId>
+        <version>3.4.0</version>
+    </dependency>
+</dependencies>
