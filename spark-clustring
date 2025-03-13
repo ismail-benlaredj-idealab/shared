@@ -1,40 +1,57 @@
-import org.apache.spark.mllib.clustering.KMeans;
-import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.ml.feature.VectorAssembler;
+import org.apache.spark.ml.linalg.Vector;
+import org.apache.spark.mllib.clustering.KMeans;
+import org.apache.spark.mllib.clustering.KMeansModel;
+import org.apache.spark.mllib.linalg.Vectors;
+import org.apache.spark.sql.*;
 
 public class KMeansClustering {
-    public static void trainKMeansModel(JavaRDD<Vector> rddData, JavaSparkContext jsc) {
-        // Set number of clusters (K) and iterations
-        int numClusters = 3; // Change as needed
-        int numIterations = 20;
+    public static void main(String[] args) {
+        // Step 1: Initialize Spark
+        SparkSession spark = SparkSession.builder()
+                .appName("KMeansClusteringExample")
+                .master("local[*]")  // Runs locally using all available cores
+                .getOrCreate();
 
-        // Train K-Means model
+        JavaSparkContext jsc = new JavaSparkContext(spark.sparkContext());
+
+        // Step 2: Load dataset from CSV
+        Dataset<Row> dataset = spark.read().format("csv")
+                .option("header", "true")  // Assumes first row has column names
+                .option("inferSchema", "true")  // Auto-detects column types
+                .load("data.csv");  // Replace with actual dataset path
+
+        // Step 3: Prepare Features
+        String[] featureCols = {"col1", "col2", "col3"};  // Replace with actual column names
+        VectorAssembler assembler = new VectorAssembler()
+                .setInputCols(featureCols)
+                .setOutputCol("features");
+
+        Dataset<Row> featureData = assembler.transform(dataset).select("features");
+
+        // Convert to RDD format for MLlib
+        JavaRDD<org.apache.spark.mllib.linalg.Vector> rddData = featureData.javaRDD()
+                .map(row -> Vectors.dense(((Vector) row.getAs("features")).toArray()));
+
+        // Step 4: Train K-Means Model
+        int numClusters = 3;  // Set the number of clusters (K)
+        int numIterations = 20;  // Set number of iterations
         KMeansModel model = KMeans.train(rddData.rdd(), numClusters, numIterations);
 
-        // Print out cluster centers
-        System.out.println("Cluster Centers: ");
-        for (Vector center : model.clusterCenters()) {
+        // Step 5: Output Cluster Centers
+        System.out.println("Cluster Centers:");
+        for (org.apache.spark.mllib.linalg.Vector center : model.clusterCenters()) {
             System.out.println(center);
         }
 
-        // Predict cluster for each data point
+        // Step 6: Predict Cluster for Each Data Point
         JavaRDD<Integer> predictions = model.predict(rddData);
+        System.out.println("Predicted Cluster Assignments:");
         predictions.collect().forEach(System.out::println);
+
+        // Stop Spark
+        spark.stop();
     }
 }
-
-
-<dependencies>
-    <dependency>
-        <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_2.12</artifactId>
-        <version>3.4.0</version>
-    </dependency>
-    <dependency>
-        <groupId>org.apache.spark</groupId>
-        <artifactId>spark-mllib_2.12</artifactId>
-        <version>3.4.0</version>
-    </dependency>
-</dependencies>
