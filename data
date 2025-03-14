@@ -1,1 +1,9 @@
 https://chatgpt.com/share/67d3ff0d-c230-800b-a937-915b76e79d64
+
+
+spark-submit --class SparkApp \
+    --master spark://<master-node-ip>:7077 \
+    --deploy-mode client \
+    --executor-memory 2G \
+    --total-executor-cores 2 \
+    /path/to/your-application.jar
