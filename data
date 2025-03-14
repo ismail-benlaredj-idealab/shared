@@ -10,3 +10,6 @@ spark-submit --class SparkApp \
 
 
 /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar
+
+
+https://learnsqlwithsagar.blogspot.com/2024/03/hadoop-installation.html
