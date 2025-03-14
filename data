@@ -7,3 +7,6 @@ spark-submit --class SparkApp \
     --executor-memory 2G \
     --total-executor-cores 2 \
     /path/to/your-application.jar
+
+
+/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar
